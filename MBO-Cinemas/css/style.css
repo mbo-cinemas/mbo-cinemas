@@ -679,11 +679,29 @@ body {
     border-radius: 5px;
     cursor: pointer;
     font-weight: 500;
-    transition: background 0.3s;
+    transition: background-color: 0.3s;
 }
 
 .book-btn:hover {
     background: #b20710;
+}
+
+#profile {
+    margin: 0px;
+}
+
+#profile-picture {
+    background: rgba(255,255,255,0.1);
+    width: 500px;
+    height: 500px;
+    border-radius: 10px;
+    margin-left: 3%;
+}
+
+#profile-picture-image {
+    width: 400px;
+    margin-top: 10%;
+    margin-left: 10%;
 }
 
 .app-banner {
