@@ -1,5 +1,5 @@
 class Movie {
-    constructor({ id, title, genre, rating, duration, description, locations, times, trailerUrl }) {
+    constructor({ id, title, genre, rating, duration, description, locations, times, trailerUrl, imageUrl }) {
         this.id = id;
         this.title = title;
         this.genre = genre;
@@ -9,13 +9,14 @@ class Movie {
         this.locations = locations;
         this.times = times;
         this.trailerUrl = trailerUrl;
+        this.imageUrl = imageUrl;
     }
 
     render() {
         return `
             <div class="movie-card">
                 <div class="movie-poster-wrapper">
-                    <img src="https://via.placeholder.com/300x450?text=${this.title}" alt="${this.title} Poster">
+                    <img src="${this.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}" alt="${this.title} Poster">
                 </div>
                 <div class="movie-details">
                     <h3 class="movie-title">${this.title}</h3>
@@ -97,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             description: "Riley is a teenager now, and her emotions are more complicated than ever.",
             locations: ["amsterdam", "den-haag"],
             times: ["10:15", "12:30", "15:00", "17:15"],
-
+            imageUrl: "../MBO-Cinemas/images/inside out 2 image.jpg",
         },
         {
             id: 2,
@@ -108,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
             description: "The origin story of the mighty warrior Furiosa.",
             locations: ["den-haag", "amsterdam"],
             times: ["11:00", "14:00", "17:00", "20:00"],
-
+            imageUrl: "../MBO-Cinemas/images/furiosa image.jpg",
         },
         {
             id: 3,
@@ -119,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             description: "A heartwarming comedy about an unusually tall man finding his way in life.",
             locations: ["rotterdam", "utrecht"],
             times: ["13:30", "16:00", "18:30", "21:00"],
-
+            imageUrl: "../MBO-Cinemas/images/the tall guy.jpg",
         },
         {
             id: 4,
@@ -130,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             description: "The next chapter in the Planet of the Apes saga.",
             locations: ["amsterdam", "rotterdam"],
             times: ["12:00", "15:30", "19:00", "22:00"],
-
+            imageUrl: "../MBO-Cinemas/images/kingdom of apes image.jpg",
         }
     ];
 
