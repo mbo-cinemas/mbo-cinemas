@@ -679,7 +679,7 @@ body {
     border-radius: 5px;
     cursor: pointer;
     font-weight: 500;
-    transition: background-color: 0.3s;
+    transition: 0.3s;
 }
 
 .book-btn:hover {
