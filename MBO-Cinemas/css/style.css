@@ -686,6 +686,17 @@ body {
     background: #b20710;
 }
 
+#form1 {
+    margin-top: 10%;
+    margin-left: 5%;
+}
+
+#flexbox1 {
+    display: flex;
+    flex-direction: row;
+    gap: 100px;
+}
+
 #profile {
     margin: 0px;
 }
