@@ -55,7 +55,7 @@ body {
     border-radius: 4px;
     color: #e5e5e5;
     text-decoration: none;
-    transition: background 0.3s, color 0.3s;
+    transition: 0.3s, color 0.3s;
 }
 
 .nav-links a:hover {
@@ -595,7 +595,7 @@ body {
     color: white;
     cursor: pointer;
     font-weight: 500;
-    transition: background 0.3s;
+    transition: 0.3s;
 }
 
 .search-btn:hover {
