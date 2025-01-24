@@ -1,12 +1,17 @@
 <?php
 session_start();
+require __DIR__ . '/Database.class.php';
+require __DIR__ . '/Film.class.php';
+
+$movies = Film::getAll();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>mbocinemas</title>
+    <title>Movies - MBO Cinemas</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -22,15 +27,15 @@ session_start();
                             </linearGradient>
                         </defs>
                         <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" 
-                              fill="url(#logoGrad)" 
-                              style="font-size:28px; font-weight:800; font-family:'Poppins',sans-serif;">
+                            fill="url(#logoGrad)" 
+                            style="font-size:28px; font-weight:800; font-family:'Poppins',sans-serif;">
                             MBO CINEMA
                         </text>
                     </svg>
                 </a>
             </section>
             <section class="nav-links">
-                <a href="Movies.php" class="active">Movies</a>
+                <a href="movies.php" class="active">Movies</a>
                 <a href="locations.php">Locations</a>
                 <a href="myaccount.php">My Account</a>
             </section>
@@ -38,11 +43,22 @@ session_start();
     </header>
 
     <main class="movies-container">
+        <?php if (isset($_SESSION['message'])): ?>
+            <div class="success-message"><?= $_SESSION['message'] ?></div>
+            <?php unset($_SESSION['message']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="error-message"><?= $_SESSION['error'] ?></div>
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
+
         <section class="filter-section">
             <section class="filter-group">
                 <label>Search:</label>
                 <input type="text" id="searchInput" class="filter-select" placeholder="Search movies...">
             </section>
+            
             <section class="filter-group">
                 <label>Genre:</label>
                 <select class="filter-select" id="genreFilter">
@@ -53,9 +69,9 @@ session_start();
                     <option value="animation">Animation</option>
                     <option value="horror">Horror</option>
                     <option value="sci-fi">Sci-Fi</option>
-                    <option value="fantasy">Fantasy</option>
                 </select>
             </section>
+            
             <section class="filter-group">
                 <label>Location:</label>
                 <select class="filter-select" id="locationFilter">
@@ -66,99 +82,114 @@ session_start();
                     <option value="utrecht">Utrecht</option>
                 </select>
             </section>
-            <section class="filter-group">
-                <label>Date:</label>
-                <input type="date" class="filter-select" id="dateFilter">
-            </section>
         </section>
 
         <?php if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'admin'): ?>
-        <form action="add_movie.php" method="POST" class="form-section">
-            <section class="form-article">
-                <article class="form-group">
-                    <input type="text" name="title" class="form-input" placeholder="Titel" required>
-                </article>
-                <article class="form-group">
-                    <input type="text" name="genre" class="form-input" placeholder="Genre" required>
-                </article>
-                <article class="form-group">
-                    <input type="number" name="rating" step="0.1" class="form-input" placeholder="Rating" required>
-                </article>
-                <article class="form-group">
-                    <input type="text" name="duration" class="form-input" placeholder="Duur (bv: 2h 15m)" required>
-                </article>
-            </section>
-            
-            <section class="form-article">
-                <article class="form-group">
-                    <textarea name="description" class="form-input form-textarea" placeholder="Beschrijving"></textarea>
-                </article>
-                <article class="form-group">
-                    <input type="text" name="locations" class="form-input" placeholder="Locaties (gescheiden door komma's)" required>
-                </article>
-                <article class="form-group">
-                    <input type="text" name="times" class="form-input" placeholder="Tijden (gescheiden door komma's)" required>
-                </article>
-                <article class="form-group">
-                    <input type="text" name="imageUrl" class="form-input" placeholder="Afbeelding URL" required>
-                </article>
-            </section>
-
-            <section class="form-article">
-                <article class="form-group">
-                    <button type="submit" class="form-button">Film Toevoegen</button>
-                </article>
-            </section>
-        </form>
+            <div class="admin-actions-header">
+                <a href="add_movie.php" class="btn-add-movie">+ Add New Movie</a>
+            </div>
         <?php endif; ?>
 
         <section class="movie-grid" id="movieGrid">
-            <!-- Movies will be loaded here by JavaScript -->
+            <?php foreach ($movies as $movie): ?>
+                <article class="movie-card">
+                    <div class="movie-poster">
+                        <img src="<?= htmlspecialchars($movie->getImageUrl()) ?>" 
+                             alt="<?= htmlspecialchars($movie->getTitle()) ?> Poster"
+                             onerror="this.onerror=null;this.src='https://via.placeholder.com/300x450?text=No+Image';">
+                    </div>
+                    
+                    <div class="movie-info">
+                        <h3 class="movie-title"><?= htmlspecialchars($movie->getTitle()) ?></h3>
+                        
+                        <div class="movie-meta">
+                            <span class="genre"><?= htmlspecialchars($movie->getGenre()) ?></span>
+                            <span class="rating">⭐ <?= htmlspecialchars($movie->getRating()) ?></span>
+                            <span class="duration">⌛ <?= htmlspecialchars($movie->getDuration()) ?></span>
+                        </div>
+                        
+                        <p class="movie-description"><?= htmlspecialchars($movie->getDescription()) ?></p>
+                        
+                        <div class="show-info">
+                            <div class="locations">
+                                <strong>Locations:</strong>
+                                <?= str_replace(',', ', ', htmlspecialchars($movie->getLocations())) ?>
+                            </div>
+                            
+                            <div class="times">
+                                <strong>Show Times:</strong>
+                                <?php foreach (explode(',', $movie->getTimes()) as $time): ?>
+                                    <span class="time-slot"><?= htmlspecialchars(trim($time)) ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <a href="booking.php?id=<?= $movie->getId() ?>" class="btn-book">Book Now</a>
+                            
+                            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                                <div class="admin-actions">
+                                    <a href="edit_movie.php?id=<?= $movie->getId() ?>" class="btn-edit">Edit</a>
+                                    <form action="delete_movie.php" method="POST" 
+                                          onsubmit="return confirm('Are you sure you want to delete this movie?');">
+                                        <input type="hidden" name="id" value="<?= $movie->getId() ?>">
+                                        <button type="submit" class="btn-delete">Delete</button>
+                                    </form>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </article>
+            <?php endforeach; ?>
         </section>
     </main>
 
-    <script src="js/script.js"></script>
-
     <footer>
-        <section style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
-            <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
-                <article>
-                    <h4 style="color: #fff; margin-bottom: 1rem;">Help & Info</h4>
-                    <ul style="list-style: none;">
-                        <li><a href="#" style="color: #a0a0a0; text-decoration: none; line-height: 1.8;">FAQ</a></li>
-                        <li><a href="#" style="color: #a0a0a0; text-decoration: none; line-height: 1.8;">Support</a></li>
-                        <li><a href="#" style="color: #a0a0a0; text-decoration: none; line-height: 1.8;">Terms of Service</a></li>
-                        <li><a href="#" style="color: #a0a0a0; text-decoration: none; line-height: 1.8;">Privacy Policy</a></li>
+        <section class="footer-content">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h4>Help & Info</h4>
+                    <ul>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Support</a></li>
+                        <li><a href="#">Terms</a></li>
+                        <li><a href="#">Privacy</a></li>
                     </ul>
-                </article>
-                <article>
-                    <h4 style="color: #fff; margin-bottom: 1rem;">Contact Us</h4>
-                    <ul style="list-style: none;">
-                        <li style="color: #a0a0a0; line-height: 1.8;">Phone: +31 20 123 4567</li>
-                        <li style="color: #a0a0a0; line-height: 1.8;">Email: info@mbocinemas.com</li>
-                        <li style="color: #a0a0a0; line-height: 1.8;">Address: Amsterdam, Netherlands</li>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li>Phone: +31 20 123 4567</li>
+                        <li>Email: info@mbocinemas.com</li>
+                        <li>Address: Amsterdam, NL</li>
                     </ul>
-                </article>
-                <article>
-                    <h4 style="color: #fff; margin-bottom: 1rem;">Follow Us</h4>
-                    <section style="display: flex; gap: 1rem;">
-                        <a href="https://facebook.com/mbocinemas" style="color: #a0a0a0; text-decoration: none;">Facebook</a>
-                        <a href="https://twitter.com/mbocinemas" style="color: #a0a0a0; text-decoration: none;">Twitter</a>
-                        <a href="https://instagram.com/mbocinemas" style="color: #a0a0a0; text-decoration: none;">Instagram</a>
-                    </section>
-                </article>
-                <article>
-                    <h4 style="color: #fff; margin-bottom: 1rem;">Download Our App</h4>
-                    <section style="display: flex; gap: 1rem;">
-                        <a href="https://apps.apple.com/mbocinemas" style="color: #a0a0a0; text-decoration: none;">iOS App</a>
-                        <a href="https://play.google.com/store/mbocinemas" style="color: #a0a0a0; text-decoration: none;">Android App</a>
-                    </section>
-                </article>
-            </section>
-            <section style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #333; color: #a0a0a0;">
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Follow Us</h4>
+                    <div class="social-links">
+                        <a href="#">Facebook</a>
+                        <a href="#">Twitter</a>
+                        <a href="#">Instagram</a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Apps</h4>
+                    <div class="app-links">
+                        <a href="#">iOS</a>
+                        <a href="#">Android</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="copyright">
                 © 2024 MBO Cinema. All rights reserved.
-            </section>
+            </div>
         </section>
     </footer>
+
+    <script src="js/script.js"></script>
 </body>
 </html>

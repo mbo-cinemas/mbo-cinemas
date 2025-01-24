@@ -1,51 +1,40 @@
 <?php
 session_start();
+require 'Database.class.php';
 
-// Check if the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get email and password from the form
-    $email = $_POST['email'];
+    $pdo = Database::getInstance();
+    
+    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
     $password = $_POST['password'];
 
     try {
-        // Connect to the database (replace with actual credentials)
-        $pdo = new PDO('mysql:host=localhost;dbname=mbocinemas', 'root', '');
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE email = ?');
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
 
-        // Prepare and execute the query to fetch the user by email
-        $stmt = $pdo->prepare('SELECT * FROM users WHERE email = :email');
-        $stmt->execute(['email' => $email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // Check if user exists and password is correct
         if ($user && password_verify($password, $user['password'])) {
-            // Successful login
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['email'] = $user['email'];
             $_SESSION['role'] = $user['role'];
-
-            // Redirect based on user role
-            if ($_SESSION['role'] === 'admin') {
-                header('Location: add_movie.php');
-            } else {
-                header('Location: movies.php');
-            }
+            
+            header('Location: ' . ($_SESSION['role'] === 'admin' ? 'add_movie.php' : 'movies.php'));
             exit();
         } else {
-            // Failed login, set error message
-            $error = $user ? 'Invalid password' : 'User not found';
+            $_SESSION['error'] = 'Ongeldige inloggegevens';
         }
     } catch (PDOException $e) {
-        // Handle connection error
-        $error = 'Database connection failed: ' . $e->getMessage();
+        $_SESSION['error'] = 'Databasefout: ' . $e->getMessage();
     }
+    header('Location: login.php');
+    exit();
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - MBO Cinemas</title>
     <link rel="stylesheet" href="css/style.css">
@@ -114,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
 </head>
-<body>
+
     <div class="auth-container">
         <header class="header">
             <nav class="nav">
@@ -157,5 +146,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
         </div>
     </div>
+    <script src="js/form-validation.js"></script>
 </body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   
 </html>
