@@ -1,283 +1,79 @@
 <?php
 session_start();
-if (!isset($_SESSION['user'])) {
+require __DIR__ . '/Database.class.php';
+
+if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
 }
 
-$user = $_SESSION['user'];
+try {
+    $pdo = Database::getInstance();
+    $userStmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');
+    $userStmt->execute([$_SESSION['user_id']]);
+    $user = $userStmt->fetch();
+    
+    $bookingStmt = $pdo->prepare("
+        SELECT movies.title, bookings.* 
+        FROM bookings
+        JOIN movies ON bookings.movie_id = movies.id
+        WHERE user_id = ?
+        ORDER BY booking_date DESC
+        LIMIT 5
+    ");
+    $bookingStmt->execute([$_SESSION['user_id']]);
+    $bookings = $bookingStmt->fetchAll();
+} catch (PDOException $e) {
+    die("Database error: " . $e->getMessage());
+}
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Account | MBO Cinema</title>
-    <script src="js/script.js"></script>
-</head>
-<body>
-    
-</body>
-</html>
-<style>
-:root {
-    --primary: #e50914;
-    --secondary: #141414;
-    --background: #141414;
-    --text: #ffffff;
-}
+    <title>My Account - MBO Cinemas</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .account-container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+        .account-header { text-align: center; margin-bottom: 2rem; padding: 2rem; background: #1f1f1f; border-radius: 10px; border: 1px solid #2d2d2d; }
+        .account-header h1 { color: #e50914; font-size: 2.5rem; margin-bottom: 1rem; }
+        .user-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 3rem; }
+        .info-card { background: #1a1a1a; padding: 2rem; border-radius: 10px; border-left: 4px solid #e50914; }
+        .info-card h3 { color: #e50914; margin-bottom: 1rem; font-size: 1.2rem; }
+        .bookings-list { background: #1a1a1a; padding: 2rem; border-radius: 10px; margin-bottom: 2rem; position: relative; }
+        .booking-item { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; margin: 1rem 0; background: #2d2d2d; border-radius: 8px; transition: transform 0.3s; }
+        .booking-item:hover { transform: translateX(10px); }
+        .booking-details h4 { color: #fff; margin-bottom: 0.5rem; }
+        .booking-meta { color: #a0a0a0; font-size: 0.9rem; }
+        .logout-btn { display: block; width: 200px; margin: 2rem auto; text-align: center; padding: 1rem 2rem; background: #e50914; color: white; border-radius: 5px; text-decoration: none; transition: 0.3s; }
+        .logout-btn:hover { background: #b20710; }
+        
+        /* Nieuwe button styling */
+        .btn-view-all {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #e50914;
+            color: white !important;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid #e50914;
+            margin-top: 1rem;
+        }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-}
-
-body {
-    background: var(--background);
-    color: var(--text);
-}
-
-.header {
-    background: rgba(20,20,20,0.95);
-    padding: 0.5rem 0;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.nav {
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.logo svg {
-    height: 50px;
-    width: 200px;
-}
-
-.nav-links {
-    display: flex;
-    gap: 1.5rem;
-}
-
-.nav-links a {
-    text-transform: uppercase;
-    font-size: 0.9rem;
-    letter-spacing: 1px;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    color: #e5e5e5;
-    text-decoration: none;
-    transition:  0.3s, color 0.3s;
-}
-
-.nav-links a:hover {
-    background: rgba(229,9,20,0.1);
-    color: var(--primary);
-}
-
-.nav-links a.active {
-    background: rgba(229,9,20,0.1);
-    color: var(--primary);
-}
-
-.container {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 2rem;
-}
-
-.account-grid {
-    display: grid;
-    grid-template-columns: 250px 1fr;
-    gap: 2rem;
-    margin-top: 2rem;
-}
-
-.sidebar {
-    background: #1f1f1f;
-    border-radius: 10px;
-    padding: 1.5rem;
-    height: fit-content;
-}
-
-.profile-section {
-    text-align: center;
-    margin-bottom: 2rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid #333;
-}
-
-.profile-image {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    margin-bottom: 1rem;
-    border: 3px solid var(--primary);
-}
-
-.profile-name {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
-}
-
-.profile-email {
-    color: #a0a0a0;
-    font-size: 0.9rem;
-}
-
-.menu-items {
-    list-style: none;
-}
-
-.menu-item {
-    margin-bottom: 0.5rem;
-}
-
-.menu-link {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    color: #e5e5e5;
-    text-decoration: none;
-    border-radius: 5px;
-    transition: all 0.3s;
-}
-
-.menu-link:hover, .menu-link.active {
-    background: rgba(229,9,20,0.1);
-    color: var(--primary);
-}
-
-.content {
-    background: #1f1f1f;
-    border-radius: 10px;
-    padding: 2rem;
-}
-
-.section-title {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #333;
-}
-
-.booking-card {
-    background: #272727;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.booking-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-}
-
-.movie-info h3 {
-    margin-bottom: 0.5rem;
-}
-
-.booking-details {
-    color: #a0a0a0;
-    font-size: 0.9rem;
-}
-
-.booking-status {
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.status-confirmed {
-    background: rgba(46, 213, 115, 0.1);
-    color: #2ed573;
-}
-
-.qr-code {
-    width: 100px;
-    height: 100px;
-    background: #fff;
-    padding: 0.5rem;
-    border-radius: 4px;
-}
-
-.ticket-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #333;
-}
-
-.detail-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.detail-label {
-    color: #a0a0a0;
-    font-size: 0.9rem;
-}
-
-.detail-value {
-    font-weight: 500;
-}
-
-.btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 5px;
-    text-decoration: none;
-    transition: all 0.3s;
-    display: inline-block;
-    font-weight: 500;
-    text-align: center;
-}
-
-.btn-danger {
-    background: var(--primary);
-    color: white;
-}
-
-.btn-danger:hover {
-    background: #b20710;
-}
-
-@media (max-width: 768px) {
-    .account-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .nav {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .ticket-details {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
+        .btn-view-all:hover {
+            background: #b20710;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(229, 9, 20, 0.3);
+        }
+    </style>
 </head>
 <body>
     <header class="header">
         <nav class="nav">
-            <div class="logo">
+            <section class="logo">
                 <a href="index.php">
                     <svg width="200" height="50" viewBox="0 0 200 50">
                         <defs>
@@ -286,84 +82,117 @@ body {
                                 <stop offset="100%" style="stop-color:#b20710"/>
                             </linearGradient>
                         </defs>
-                        <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="url(#logoGrad)" style="font-size:28px; font-weight:800; font-family:&apos;Poppins&apos;,sans-serif;">
+                        <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" 
+                            fill="url(#logoGrad)" 
+                            style="font-size:28px; font-weight:800; font-family:'Poppins',sans-serif;">
                             MBO CINEMA
                         </text>
                     </svg>
                 </a>
-            </div>
-            <div class="nav-links">
+            </section>
+            <section class="nav-links">
                 <a href="movies.php">Movies</a>
                 <a href="locations.php">Locations</a>
                 <a href="myaccount.php" class="active">My Account</a>
-            </div>
+                <?php if($_SESSION['role'] === 'admin'): ?>
+                    <a href="add_movie.php">Add Movie</a>
+                <?php endif; ?>
+            </section>
         </nav>
     </header>
 
-    <main class="container">
-        <div class="account-grid">
-            <class="sidebar">
-            <div id="account-info">
-                <h1>Welcome, <span id="user-name"><?php echo htmlspecialchars($user['name']); ?></span>!</h1>
-                <p>Your email: <span id="user-email"><?php echo htmlspecialchars($user['email']); ?></span></p>
-            </div>    
-                <ul class="menu-items">
-                    <li class="menu-item">
-                        <a href="../mbo-cinemas/bookings.php" class="menu-link active">
-                            <i class="fas fa-ticket-alt"></i>
-                            My Bookings
-                        </a>
-                    </li>
-                    <li class="menu-item">
-                        <a href="#" class="menu-link" onclick="handleLogout(event)">
-                            <i class="fas fa-sign-out-alt"></i>
-                            Logout
-                        </a>
-                    </li>
-                </ul>
-            
-    </main>
-    
-<footer style="background: #1f1f1f; padding: 3rem 0; margin-top: 4rem;">
-    <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
-            <div>
-                <h4 style="color: #fff; margin-bottom: 1rem;">Help &amp; Info</h4>
-                <ul style="list-style: none;">
-                    <li><a href="" style="color: #a0a0a0; text-decoration: none; line-height: 1.8;">FAQ</a></li>
-                    <li><a href="" style="color: #a0a0a0; text-decoration: none; line-height: 1.8;">Support</a></li>
-                    <li><a href="s" style="color: #a0a0a0; text-decoration: none; line-height: 1.8;">Terms of Service</a></li>
-                    <li><a href="" style="color: #a0a0a0; text-decoration: none; line-height: 1.8;">Privacy Policy</a></li>
-                </ul>
+    <main class="account-container">
+        <section class="account-header">
+            <h1>Welcome, <?= htmlspecialchars($user['email']) ?></h1>
+            <div class="user-info">
+                <article class="info-card">
+                    <h3>Account Details</h3>
+                    <p><strong>Email:</strong> <?= htmlspecialchars($user['email']) ?></p>
+                    <p> <?= htmlspecialchars($user['role']) ?></p>
+                </article>
+                
+                <article class="info-card">
+                    <h3>Statistics</h3>
+                    <p><strong>Bookings:</strong> <?= count($bookings) ?></p>
+                </article>
             </div>
-            <div>
-                <h4 style="color: #fff; margin-bottom: 1rem;">Contact Us</h4>
-                <ul style="list-style: none;">
-                    <li style="color: #a0a0a0; line-height: 1.8;">Phone: +31 20 123 4567</li>
-                    <li style="color: #a0a0a0; line-height: 1.8;">Email: info@mbocinemas.com</li>
-                    <li style="color: #a0a0a0; line-height: 1.8;">Address: Amsterdam, Netherlands</li>
-                </ul>
-            </div>
-            <div>
-                <h4 style="color: #fff; margin-bottom: 1rem;">Follow Us</h4>
-                <div style="display: flex; gap: 1rem;">
-                    <a href="https://facebook.com/mbocinemas" style="color: #a0a0a0; text-decoration: none;">Facebook</a>
-                    <a href="https://twitter.com/mbocinemas" style="color: #a0a0a0; text-decoration: none;">Twitter</a>
-                    <a href="https://instagram.com/mbocinemas" style="color: #a0a0a0; text-decoration: none;">Instagram</a>
-                </div>
-            </div>
-            <div>
-                <h4 style="color: #fff; margin-bottom: 1rem;">Download Our App</h4>
-                <div style="display: flex; gap: 1rem;">
-                    <a href="https://apps.apple.com/mbocinemas" style="color: #a0a0a0; text-decoration: none;">iOS App</a>
-                    <a href="https://play.google.com/store/mbocinemas" style="color: #a0a0a0; text-decoration: none;">Android App</a>
-                </div>
-            </div>
-        </div>
-        <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #333; color: #a0a0a0;">
-            &#xa9; 2024 MBO Cinema. All rights reserved.
-        </div>
-    </div>
-</footer>
+        </section>
 
-</body></html>
+        <section class="bookings-list">
+            <h2 style="color: #e50914; margin-bottom: 2rem;">My Recent Bookings</h2>
+            <?php if(count($bookings) > 0): ?>
+                <?php foreach($bookings as $booking): ?>
+                    <article class="booking-item">
+                        <div class="booking-details">
+                            <h4><?= htmlspecialchars($booking['title']) ?></h4>
+                            <div class="booking-meta">
+                                <span><?= date('H:i', strtotime($booking['show_time'])) ?></span> • 
+                                <span><?= $booking['num_tickets'] ?> tickets</span>
+                            </div>
+                        </div>
+                        <div class="booking-date">
+                            <?= date('d-m-Y', strtotime($booking['booking_date'])) ?>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="no-bookings" style="text-align: center; padding: 2rem;">
+                    <p style="color: #a0a0a0; margin-bottom: 1rem;">No bookings found</p>
+                    <a href="movies.php" class="btn-primary" style="background: #e50914; color: white; padding: 0.5rem 1.5rem; border-radius: 5px; text-decoration: none;">Book Now!</a>
+                </div>
+            <?php endif; ?>
+
+            <!-- Nieuwe View All Bookings knop -->
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="bookings.php" class="btn-view-all">
+                    🎟️ View All Bookings
+                </a>
+            </div>
+        </section>
+
+        <a href="logout.php" class="logout-btn">Logout</a>
+    </main>
+
+    <footer>
+        <section class="footer-content">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h4>Help & Info</h4>
+                    <ul>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Support</a></li>
+                        <li><a href="#">Terms</a></li>
+                        <li><a href="#">Privacy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li>Phone: +31 20 123 4567</li>
+                        <li>Email: info@mbocinemas.com</li>
+                        <li>Address: Amsterdam, NL</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Follow Us</h4>
+                    <div class="social-links">
+                        <a href="#">Facebook</a>
+                        <a href="#">Twitter</a>
+                        <a href="#">Instagram</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Apps</h4>
+                    <div class="app-links">
+                        <a href="#">iOS</a>
+                        <a href="#">Android</a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2024 MBO Cinema. All rights reserved.
+            </div>
+        </section>
+    </footer>
+</body>
+</html>

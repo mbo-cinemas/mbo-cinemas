@@ -3,7 +3,7 @@ session_start();
 require __DIR__ . '/Database.class.php';
 require __DIR__ . '/Film.class.php';
 
-// Authorization check
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header('Location: movies.php');
     exit();
