@@ -113,7 +113,6 @@ session_start();
         <?php endif; ?>
 
         <section class="movie-grid" id="movieGrid">
-            <!-- Movies will be loaded here by JavaScript -->
         </section>
     </main>
 

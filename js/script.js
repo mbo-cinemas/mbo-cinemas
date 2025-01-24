@@ -180,3 +180,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('/api/user-info')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('user-name').textContent = data.name;
+            document.getElementById('user-email').textContent = data.email;
+        })
+        .catch(error => console.error('Error fetching user info:', error));
+});

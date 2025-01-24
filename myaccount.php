@@ -1,5 +1,11 @@
 <?php
-    session_start();
+session_start();
+if (!isset($_SESSION['user'])) {
+    header('Location: login.php');
+    exit;
+}
+
+$user = $_SESSION['user'];
 ?>
 
 
@@ -9,6 +15,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Account | MBO Cinema</title>
+    <script src="js/script.js"></script>
 </head>
 <body>
     
@@ -296,11 +303,10 @@ body {
     <main class="container">
         <div class="account-grid">
             <class="sidebar">
-                <div class="profile-section">
-                    <img src="images/pfp.png" alt="Profile" class="profile-image">
-                    <h2 class="profile-name">John Doe</h2>
-                    <p class="profile-email">john.doe@example.com</p>
-                </div>
+            <div id="account-info">
+                <h1>Welcome, <span id="user-name"><?php echo htmlspecialchars($user['name']); ?></span>!</h1>
+                <p>Your email: <span id="user-email"><?php echo htmlspecialchars($user['email']); ?></span></p>
+            </div>    
                 <ul class="menu-items">
                     <li class="menu-item">
                         <a href="../mbo-cinemas/bookings.php" class="menu-link active">
@@ -317,9 +323,7 @@ body {
                 </ul>
             
     </main>
-
-<script></script>
-
+    
 <footer style="background: #1f1f1f; padding: 3rem 0; margin-top: 4rem;">
     <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
