@@ -1,6 +1,5 @@
 <?php
-include "db.php";
-session_start();
+    session_start();
 ?>
 
 
@@ -304,9 +303,9 @@ body {
                 </div>
                 <ul class="menu-items">
                     <li class="menu-item">
-                        <a href="#bookings" class="menu-link active">
+                        <a href="../mbo-cinemas/bookings.php" class="menu-link active">
                             <i class="fas fa-ticket-alt"></i>
-                            My Bookings  
+                            My Bookings
                         </a>
                     </li>
                     <li class="menu-item">
