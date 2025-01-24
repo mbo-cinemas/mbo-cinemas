@@ -1,46 +1,44 @@
 <?php
 session_start();
-
-if (isset($_SESSION['user_id'])) {
-    header('Location: movies.php');
-    exit();
-}
+require 'Database.class.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    require 'db.php';
-
+    $pdo = Database::getInstance();
+    
     $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
-    // Validate password match
-    if ($password !== $confirm_password) {
-        $error = 'Passwords do not match';
-    } else {
-        // Check if email already exists
+    try {
+        if ($password !== $confirm_password) {
+            throw new Exception('Wachtwoorden komen niet overeen');
+        }
+
         $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
         $stmt->execute([$email]);
         if ($stmt->fetch()) {
-            $error = 'Email already registered';
-        } else {
-            // Create new user
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (email, password, role) VALUES (?, ?, 'user')");
-            
-            if ($stmt->execute([$email, $hashed_password])) {
-                // Auto-login after signup
-                $_SESSION['user_id'] = $pdo->lastInsertId();
-                $_SESSION['email'] = $email;
-                $_SESSION['role'] = 'user';
-                header('Location: movies.php');
-                exit();
-            } else {
-                $error = 'Registration failed';
-            }
+            throw new Exception('Email is al geregistreerd');
         }
+
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("INSERT INTO users (email, password, role) VALUES (?, ?, 'user')");
+        
+        if ($stmt->execute([$email, $hashed_password])) {
+            $_SESSION['user_id'] = $pdo->lastInsertId();
+            $_SESSION['email'] = $email;
+            $_SESSION['role'] = 'user';
+            header('Location: movies.php');
+            exit();
+        }
+    } catch (Exception $e) {
+        $_SESSION['error'] = $e->getMessage();
+        header('Location: signup.php');
+        exit();
     }
 }
 ?>
+
+<!-- HTML form met validatie script -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -158,5 +156,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </form>
         </div>
     </div>
+    <script src="js/form-validation.js"></script>
 </body>
 </html>

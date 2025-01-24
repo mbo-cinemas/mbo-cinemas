@@ -1,13 +1,20 @@
 <?php
 header('Content-Type: application/json');
-require 'db.php'; // Gebruik de databaseverbinding uit db.php
+require __DIR__ . '/Database.class.php';
+require __DIR__ . '/Film.class.php';
 
 try {
-    $stmt = $pdo->query("SELECT * FROM movies");
-    $movies = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    echo json_encode($movies); // Stuur films terug als JSON
-} catch (PDOException $e) {
-    echo json_encode(['error' => 'Fout bij het ophalen van films: ' . $e->getMessage()]);
+    $movies = Film::getAll();
+    echo json_encode([
+        'success' => true,
+        'data' => $movies,
+        'count' => count($movies)
+    ]);
+} catch (Exception $e) {
+    echo json_encode([
+        'success' => false,
+        'error' => $e->getMessage(),
+        'trace' => $e->getTrace() // Alleen voor development!
+    ]);
 }
 ?>

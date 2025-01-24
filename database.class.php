@@ -1,7 +1,7 @@
 <?php
-abstract class Database {
+class Database {
     private static $instance = null;
-    protected $pdo;
+    private $pdo;
 
     private function __construct() {
         try {
@@ -18,7 +18,7 @@ abstract class Database {
 
     public static function getInstance() {
         if (!self::$instance) {
-            self::$instance = new static();
+            self::$instance = new Database();
         }
         return self::$instance->pdo;
     }

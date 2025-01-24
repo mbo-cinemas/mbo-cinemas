@@ -1,5 +1,5 @@
 class Movie {
-    constructor({ id, title, genre, rating, duration, description, locations, times, trailerUrl, imageUrl }) {
+    constructor({ id, title, genre, rating, duration, description, locations, times, imageUrl }) {
         this.id = id;
         this.title = title;
         this.genre = genre;
@@ -8,179 +8,198 @@ class Movie {
         this.description = description;
         this.locations = locations;
         this.times = times;
-        this.trailerUrl = trailerUrl;
         this.imageUrl = imageUrl;
     }
 
     render() {
         return `
-            <div class="movie-card">
-                <div class="movie-poster-wrapper">
-                    <img src="${this.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}" alt="${this.title} Poster">
-                </div>
-                <div class="movie-details">
+            <article class="movie-card">
+                <article class="movie-poster">
+                    <img src="${this.imageUrl}" alt="${this.title}">
+                </article>
+                <article class="movie-info">
                     <h3 class="movie-title">${this.title}</h3>
-                    <div class="movie-rating">★ ${this.rating}</div>
-                    <p class="movie-meta">${this.genre} | ${this.duration}</p>
+                    <article class="movie-meta">
+                        <span class="rating">⭐ ${this.rating}</span>
+                        <span>${this.duration}</span>
+                    </article>
                     <p class="movie-description">${this.description}</p>
                     <div class="show-times">
-                        ${this.times.map(time => `<span class="time-slot">${time}</span>`).join('')}
+                        ${this.times.split(',').map(time => `<span class="time-slot">${time.trim()}</span>`).join('')}
                     </div>
-                    <a href="#" class="booking-button" data-movie-id="${this.id}">Book Now</a>
-                </div>
-            </div>
+                    <button class="book-btn" data-movie-id="${this.id}">Boek Nu</button>
+                </article>
+            </article>
         `;
     }
 }
 
 class MovieApp {
-    constructor(movies) {
-        this.movies = movies.map(movieData => new Movie(movieData));
-        this.filteredMovies = [...this.movies];
+    constructor() {
+        this.movies = [];
+        this.filteredMovies = [];
         this.init();
     }
 
-    init() {
-        this.renderMovies();
+    async init() {
+        await this.fetchMovies();
         this.setupFilters();
-        this.setupSearch();
+        this.setupEventListeners();
+    }
+
+    async fetchMovies() {
+        try {
+            const response = await fetch('fetch_movies.php');
+            const data = await response.json();
+            
+            if (data.error) throw new Error(data.error);
+            
+            this.movies = data.map(movie => new Movie(movie));
+            this.filteredMovies = [...this.movies];
+            this.renderMovies();
+            
+        } catch (error) {
+            console.error('Error fetching movies:', error);
+            this.showFeedback('Fout bij laden films', 'error');
+        }
     }
 
     renderMovies() {
         const grid = document.getElementById('movieGrid');
         grid.innerHTML = '';
         this.filteredMovies.forEach(movie => {
-            const movieCard = document.createElement('div');
-            movieCard.innerHTML = movie.render();
-            grid.appendChild(movieCard);
+            grid.insertAdjacentHTML('beforeend', movie.render());
         });
     }
 
     setupFilters() {
-        const genreFilter = document.getElementById('genreFilter');
-        const locationFilter = document.getElementById('locationFilter');
-        const dateFilter = document.getElementById('dateFilter');
-
-        [genreFilter, locationFilter, dateFilter].forEach(filter => {
-            filter.addEventListener('change', () => this.filterMovies());
-        });
-    }
-
-    setupSearch() {
-        const searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('input', () => this.filterMovies());
+        document.getElementById('searchInput').addEventListener('input', () => this.filterMovies());
+        document.getElementById('genreFilter').addEventListener('change', () => this.filterMovies());
+        document.getElementById('locationFilter').addEventListener('change', () => this.filterMovies());
     }
 
     filterMovies() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         const genre = document.getElementById('genreFilter').value.toLowerCase();
         const location = document.getElementById('locationFilter').value.toLowerCase();
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
 
         this.filteredMovies = this.movies.filter(movie => {
-            const genreMatch = genre === 'all' || movie.genre.toLowerCase().includes(genre);
-            const locationMatch = location === 'all' || movie.locations.includes(location);
-            const searchMatch = searchTerm === '' || movie.title.toLowerCase().includes(searchTerm) || movie.description.toLowerCase().includes(searchTerm);
-            return genreMatch && locationMatch && searchMatch;
+            const matchesSearch = movie.title.toLowerCase().includes(searchTerm) || 
+                                movie.description.toLowerCase().includes(searchTerm);
+            const matchesGenre = genre === 'all' || movie.genre.toLowerCase() === genre;
+            const matchesLocation = location === 'all' || 
+                                  movie.locations.toLowerCase().includes(location);
+            
+            return matchesSearch && matchesGenre && matchesLocation;
         });
 
         this.renderMovies();
     }
-}
 
-document.addEventListener('DOMContentLoaded', () => {
-    const allMovies = [
-        {
-            id: 1,
-            title: "Inside Out 2",
-            genre: "Animation",
-            rating: 4.4,
-            duration: "1h 40m",
-            description: "Riley is a teenager now, and her emotions are more complicated than ever.",
-            locations: ["amsterdam", "den-haag"],
-            times: ["10:15", "12:30", "15:00", "17:15"],
-            imageUrl: "../MBO-Cinemas/images/inside out 2 image.jpg",
-        },
-        {
-            id: 2,
-            title: "Furiosa: A Mad Max Saga",
-            genre: "Action",
-            rating: 4.8,
-            duration: "2h 15m",
-            description: "The origin story of the mighty warrior Furiosa.",
-            locations: ["den-haag", "amsterdam"],
-            times: ["11:00", "14:00", "17:00", "20:00"],
-            imageUrl: "../MBO-Cinemas/images/furiosa image.jpg",
-        },
-        {
-            id: 3,
-            title: "The Tall Guy",
-            genre: "Comedy",
-            rating: 4.2,
-            duration: "1h 55m",
-            description: "A heartwarming comedy about an unusually tall man finding his way in life.",
-            locations: ["rotterdam", "utrecht"],
-            times: ["13:30", "16:00", "18:30", "21:00"],
-            imageUrl: "../MBO-Cinemas/images/the tall guy.jpg",
-        },
-        {
-            id: 4,
-            title: "Kingdom of the Planet of the Apes",
-            genre: "Sci-Fi",
-            rating: 4.6,
-            duration: "2h 25m",
-            description: "The next chapter in the Planet of the Apes saga.",
-            locations: ["amsterdam", "rotterdam"],
-            times: ["12:00", "15:30", "19:00", "22:00"],
-            imageUrl: "../MBO-Cinemas/images/kingdom of apes image.jpg",
-        }
-    ];
-
-    new MovieApp(allMovies);
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    fetchMovies();
-
-    function fetchMovies() {
-        fetch('fetch_movies.php')
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    console.error(data.error);
-                    return;
-                }
-                renderMovies(data);
-            })
-            .catch(err => console.error('Error fetching movies:', err));
-    }
-
-    function renderMovies(movies) {
-        const movieGrid = document.getElementById('movieGrid');
-        movieGrid.innerHTML = ''; // Maak de container leeg
-
-        movies.forEach(movie => {
-            const movieCard = document.createElement('div');
-            movieCard.className = 'movie-card';
-            movieCard.innerHTML = `
-                <div class="movie-poster-wrapper">
-                    <img src="${movie.imageUrl || 'https://via.placeholder.com/300x450'}" alt="${movie.title} Poster">
-                </div>
-                <div class="movie-details">
-                    <h3 class="movie-title">${movie.title}</h3>
-                    <div class="movie-rating">★ ${movie.rating}</div>
-                    <p class="movie-meta">${movie.genre} | ${movie.duration}</p>
-                    <p class="movie-description">${movie.description}</p>
-                    <div class="show-times">
-                        ${movie.times.split(',').map(time => `<span class="time-slot">${time}</span>`).join('')}
-                    </div>
-                    <a href="#" class="booking-button" data-movie-id="${movie.id}">Book Now</a>
-                </div>
-            `;
-            movieGrid.appendChild(movieCard);
+    setupEventListeners() {
+        // Booking functionality
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('book-btn')) {
+                this.handleBooking(e.target.dataset.movieId);
+            }
         });
     }
-});
 
+    handleBooking(movieId) {
+        const movie = this.movies.find(m => m.id == movieId);
+        this.showFeedback(`Booking gestart voor: ${movie.title}`, 'success');
+        // Voeg hier booking logica toe
+    }
+
+    showFeedback(message, type = 'info') {
+        const feedback = document.createElement('div');
+        feedback.className = `feedback ${type}`;
+        feedback.textContent = message;
+        
+        document.body.appendChild(feedback);
+        setTimeout(() => feedback.remove(), 3000);
+    }
+}
+
+// Form Validation & localStorage
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Movie App
+    new MovieApp();
+
+    // Form handling
+    document.querySelectorAll('form').forEach(form => {
+        // Restore form data
+        const savedData = JSON.parse(localStorage.getItem(form.id));
+        if (savedData) {
+            Object.entries(savedData).forEach(([name, value]) => {
+                const input = form.querySelector(`[name="${name}"]`);
+                if (input) input.value = value;
+            });
+        }
+
+        // Real-time validation
+        form.querySelectorAll('input, textarea').forEach(input => {
+            input.addEventListener('input', function() {
+                validateField(this);
+                saveFormState(form);
+            });
+        });
+
+        // Submit handling
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            form.querySelectorAll('[required]').forEach(input => {
+                if (!validateField(input)) isValid = false;
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                showFeedback('Corrigeer de gemarkeerde velden', 'error');
+            } else {
+                localStorage.removeItem(form.id);
+            }
+        });
+    });
+
+    function validateField(field) {
+        let isValid = true;
+        const value = field.value.trim();
+
+        // Required check
+        if (field.required && !value) isValid = false;
+
+        // Email validation
+        if (field.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+            isValid = false;
+        }
+
+        // Password match
+        if (field.name === 'confirm_password') {
+            const password = field.form.querySelector('[name="password"]').value;
+            if (value !== password) isValid = false;
+        }
+
+        // Visual feedback
+        field.style.borderColor = isValid ? '' : '#e50914';
+        return isValid;
+    }
+
+    function saveFormState(form) {
+        const data = {};
+        form.querySelectorAll('input, textarea').forEach(input => {
+            data[input.name] = input.value;
+        });
+        localStorage.setItem(form.id, JSON.stringify(data));
+    }
+
+    function showFeedback(message, type) {
+        const feedback = document.createElement('div');
+        feedback.className = `feedback ${type}`;
+        feedback.textContent = message;
+        document.body.appendChild(feedback);
+        setTimeout(() => feedback.remove(), 3000);
+    }
+});
 document.addEventListener('DOMContentLoaded', () => {
     fetch('/api/user-info')
         .then(response => response.json())
