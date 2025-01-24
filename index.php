@@ -37,7 +37,7 @@
             <h1>Experience Movie Magic</h1>
             <p>Immerse yourself in the latest blockbusters and timeless classics in state-of-the-art theaters.</p>
             <article>
-                <a href="Movies.html" class="btn btn-primary">Book Now</a>
+                <a href="Movies.php" class="btn btn-primary">Book Now</a>
             </article>
         </article>
     </section>
@@ -70,7 +70,7 @@
     <section class="now-showing">
         <article class="section-header">
             <h2>Now Showing</h2>
-            <a href="Movies.html" class="btn btn-primary">View All</a>
+            <a href="Movies.php" class="btn btn-primary">View All</a>
         </article>
         <section class="movie-grid">
             <article class="movie-card">
@@ -160,10 +160,10 @@
                 <article>
                     <h4>Help & Info</h4>
                     <ul>
-                        <li><a href="https://mbocinemas.com/faq">FAQ</a></li>
-                        <li><a href="https://mbocinemas.com/support">Support</a></li>
-                        <li><a href="https://mbocinemas.com/terms">Terms of Service</a></li>
-                        <li><a href="https://mbocinemas.com/privacy">Privacy Policy</a></li>
+                        <li><a href="">FAQ</a></li>
+                        <li><a href="">Support</a></li>
+                        <li><a href="">Terms of Service</a></li>
+                        <li><a href="">Privacy Policy</a></li>
                     </ul>
                 </article>
                 <article>

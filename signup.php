@@ -48,11 +48,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>Sign Up - MBO Cinemas</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        .auth-container {
+              .auth-container {
             min-height: 100vh;
             background-color: #141414;
             display: flex;
             flex-direction: column;
+            align-items: center;
         }
         .auth-form-container {
             flex: 1;
@@ -113,7 +114,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body>
     <div class="auth-container">
-        <!-- Header with only logo -->
         <header class="header">
             <nav class="nav">
                 <section class="logo">

@@ -3,8 +3,9 @@ session_start();
 require 'Database.class.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $pdo = Database::getInstance();
+    unset($_SESSION['error']); // Reset error bij nieuwe poging
     
+    $pdo = Database::getInstance();
     $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
     $password = $_POST['password'];
 
@@ -18,16 +19,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['email'] = $user['email'];
             $_SESSION['role'] = $user['role'];
             
-            header('Location: ' . ($_SESSION['role'] === 'admin' ? 'add_movie.php' : 'movies.php'));
-            exit();
+            header('Location: ' . ($_SESSION['role'] === 'admin' ? 'myaccount.php' : 'myaccount.php'));
+            exit(); // Belangrijk: stop verdere uitvoering
         } else {
-            $_SESSION['error'] = 'Ongeldige inloggegevens';
+            $_SESSION['error'] = 'Invalid email or password';
         }
     } catch (PDOException $e) {
-        $_SESSION['error'] = 'Databasefout: ' . $e->getMessage();
+        $_SESSION['error'] = 'Login error. Please try again.';
     }
+    
     header('Location: login.php');
-    exit();
+    exit(); // Belangrijk: stop verdere uitvoering
 }
 ?>
 
@@ -39,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Login - MBO Cinemas</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
+        /* Behoud exact dezelfde CSS */
         .auth-container {
             min-height: 100vh;
             background-color: #141414;
@@ -103,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
 </head>
-
+<body>
     <div class="auth-container">
         <header class="header">
             <nav class="nav">
@@ -128,15 +131,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </header>
 
         <div class="auth-form-container">
-            <form class="auth-form" method="POST" action="login.php">
+            <form class="auth-form" method="POST">
                 <h2 style="color: white; text-align: center; margin-bottom: 30px;">Login</h2>
                 
-                <?php if (isset($error)): ?>
-                    <div class="error-message"><?php echo $error; ?></div>
+                <?php if (isset($_SESSION['error'])): ?>
+                    <div class="error-message"><?= htmlspecialchars($_SESSION['error']) ?></div>
+                    <?php unset($_SESSION['error']); ?>
                 <?php endif; ?>
 
-                <input type="email" name="email" class="auth-input" placeholder="Email" required>
-                <input type="password" name="password" class="auth-input" placeholder="Password" required>
+                <input type="email" 
+                       name="email" 
+                       class="auth-input" 
+                       placeholder="Email"
+                       required
+                       value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '' ?>">
+
+                <input type="password" 
+                       name="password" 
+                       class="auth-input" 
+                       placeholder="Password"
+                       required>
+
                 <button type="submit" class="auth-button">Login</button>
                 
                 <p style="color: #888; text-align: center; margin-top: 20px;">
@@ -148,10 +163,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <script src="js/form-validation.js"></script>
 </body>
-</html>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-   
 </html>
